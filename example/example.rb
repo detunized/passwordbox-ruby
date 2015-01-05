@@ -5,8 +5,14 @@
 # $ rake example
 
 require "passwordbox"
+require "yaml"
 
-vault = PasswordBox::Vault.open_remote "username", "password"
+credentials = YAML.load_file File.join File.dirname(__FILE__), "credentials.yaml"
+
+username = credentials["username"]
+password = credentials["password"]
+
+vault = PasswordBox::Vault.open_remote username, password
 
 vault.accounts.each_with_index do |i, index|
     puts "#{index + 1}: #{i}"
