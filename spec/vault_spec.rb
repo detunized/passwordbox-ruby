@@ -4,7 +4,7 @@
 require "spec_helper"
 
 describe PasswordBox::Vault do
-    let(:vault) { PasswordBox::Vault.open_remote "username", "password" }
+    let(:vault) { PasswordBox::Vault.new [] }
 
     describe "#accounts" do
         context "returned accounts" do
