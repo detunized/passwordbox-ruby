@@ -28,13 +28,13 @@ describe PasswordBox::Vault do
 
         it "raises an exception on short salt" do
             expect {
-                PasswordBox::Vault.parse_response "salt" => "too short"
+                PasswordBox::Vault.parse_response valid_response.update("salt" => "too short")
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
         it "raises an exception on non-string salt" do
             expect {
-                PasswordBox::Vault.parse_response "salt" => -1
+                PasswordBox::Vault.parse_response valid_response.update("salt" => -1)
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
