@@ -44,6 +44,12 @@ describe PasswordBox::Vault do
             }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
         end
 
+        it "raises an exception on non-string derivation rules" do
+            expect {
+                PasswordBox::Vault.parse_response valid_response.update("dr" => -1)
+            }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
+        end
+
         it "raises an exception on non-JSON derivation rules" do
             expect {
                 PasswordBox::Vault.parse_response valid_response.update("dr" => "not json")
