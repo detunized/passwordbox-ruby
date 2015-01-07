@@ -13,6 +13,13 @@ describe PasswordBox::Vault do
     end
 
     describe ".parse_response" do
+        let(:valid_response) { {"salt" => "0" * 32} }
+        let(:session) { PasswordBox::Vault.parse_response valid_response }
+
+        it "parses server response and returns session" do
+            expect(session).to be_instance_of Hash
+        end
+
         it "raises an exception on missing salt" do
             expect {
                 PasswordBox::Vault.parse_response Hash.new

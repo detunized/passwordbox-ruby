@@ -40,6 +40,8 @@ module PasswordBox
             if !response["salt"].is_a?(String) || response["salt"].size < 32
                 raise "Legacy user is not supported"
             end
+
+            {}
         end
 
         def self.fetch_accounts session
