@@ -22,7 +22,7 @@ describe PasswordBox::Vault do
 
         it "raises an exception on missing salt" do
             expect {
-                PasswordBox::Vault.parse_response Hash.new
+                PasswordBox::Vault.parse_response valid_response.without("salt")
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
@@ -40,7 +40,7 @@ describe PasswordBox::Vault do
 
         it "raises an exception on missing derivation rules" do
             expect {
-                PasswordBox::Vault.parse_response valid_response.update("dr" => nil)
+                PasswordBox::Vault.parse_response valid_response.without("dr")
             }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
         end
 

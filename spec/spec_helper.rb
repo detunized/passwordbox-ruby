@@ -3,3 +3,9 @@
 
 require "passwordbox"
 require "rspec/its"
+
+class Hash
+    def without key
+        delete_if { |i| i == key }
+    end
+end
