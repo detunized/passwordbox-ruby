@@ -11,4 +11,24 @@ describe PasswordBox::Vault do
             it { expect(vault.accounts).to be_instance_of Array }
         end
     end
+
+    describe ".parse_response" do
+        it "raises an exception on missing salt" do
+            expect {
+                PasswordBox::Vault.parse_response Hash.new
+            }.to raise_error RuntimeError, "Legacy user is not supported"
+        end
+
+        it "raises an exception on short salt" do
+            expect {
+                PasswordBox::Vault.parse_response "salt" => "too short"
+            }.to raise_error RuntimeError, "Legacy user is not supported"
+        end
+
+        it "raises an exception on non-string salt" do
+            expect {
+                PasswordBox::Vault.parse_response "salt" => -1
+            }.to raise_error RuntimeError, "Legacy user is not supported"
+        end
+    end
 end

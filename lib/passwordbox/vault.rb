@@ -14,7 +14,8 @@ module PasswordBox
 
         # Fetches a blob from the server and creates a vault
         def self.open_remote username, password
-            session = login username, password
+            response = login username, password
+            session = parse_response response
             accounts = fetch_accounts session
 
             new accounts
@@ -33,6 +34,12 @@ module PasswordBox
         def self.password_hash username, password
             salt = Digest::SHA1.hexdigest username
             Digest.hexencode OpenSSL::PKCS5.pbkdf2_hmac(password, salt, 10000, 32, "sha256")
+        end
+
+        def self.parse_response response
+            if !response["salt"].is_a?(String) || response["salt"].size < 32
+                raise "Legacy user is not supported"
+            end
         end
 
         def self.fetch_accounts session
