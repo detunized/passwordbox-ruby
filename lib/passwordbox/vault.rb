@@ -3,6 +3,7 @@
 
 require "openssl"
 require "httparty"
+require "json"
 
 module PasswordBox
     class Vault
@@ -40,6 +41,13 @@ module PasswordBox
             if !response["salt"].is_a?(String) || response["salt"].size < 32
                 raise "Legacy user is not supported"
             end
+
+            if !response["dr"].is_a?(String)
+                raise "Invalid response: derivation rules are missing"
+            end
+
+            derivation_rules = JSON.parse response["dr"] rescue \
+                raise "Invalid response: derivation rules are not valid JSON"
 
             {}
         end

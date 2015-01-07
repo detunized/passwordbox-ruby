@@ -13,7 +13,7 @@ describe PasswordBox::Vault do
     end
 
     describe ".parse_response" do
-        let(:valid_response) { {"salt" => "0" * 32} }
+        let(:valid_response) { {"salt" => "0" * 32, "dr" => "{}"} }
         let(:session) { PasswordBox::Vault.parse_response valid_response }
 
         it "parses server response and returns session" do
@@ -36,6 +36,18 @@ describe PasswordBox::Vault do
             expect {
                 PasswordBox::Vault.parse_response "salt" => -1
             }.to raise_error RuntimeError, "Legacy user is not supported"
+        end
+
+        it "raises an exception on missing derivation rules" do
+            expect {
+                PasswordBox::Vault.parse_response valid_response.update("dr" => nil)
+            }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
+        end
+
+        it "raises an exception on non-JSON derivation rules" do
+            expect {
+                PasswordBox::Vault.parse_response valid_response.update("dr" => "not json")
+            }.to raise_error RuntimeError, "Invalid response: derivation rules are not valid JSON"
         end
     end
 end
