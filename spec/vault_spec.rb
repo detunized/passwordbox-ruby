@@ -32,28 +32,16 @@ describe PasswordBox::Vault do
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
-        it "raises an exception on non-string salt" do
-            expect {
-                PasswordBox::Vault.parse_response valid_response.update("salt" => -1)
-            }.to raise_error RuntimeError, "Legacy user is not supported"
-        end
-
         it "raises an exception on missing derivation rules" do
             expect {
                 PasswordBox::Vault.parse_response valid_response.without("dr")
-            }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
-        end
-
-        it "raises an exception on non-string derivation rules" do
-            expect {
-                PasswordBox::Vault.parse_response valid_response.update("dr" => -1)
-            }.to raise_error RuntimeError, "Invalid response: derivation rules are missing"
+            }.to raise_error RuntimeError, "Failed to parse derivation rules"
         end
 
         it "raises an exception on non-JSON derivation rules" do
             expect {
                 PasswordBox::Vault.parse_response valid_response.update("dr" => "not json")
-            }.to raise_error RuntimeError, "Invalid response: derivation rules are not valid JSON"
+            }.to raise_error RuntimeError, "Failed to parse derivation rules"
         end
     end
 end

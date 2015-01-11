@@ -38,16 +38,12 @@ module PasswordBox
         end
 
         def self.parse_response response
-            if !response["salt"].is_a?(String) || response["salt"].size < 32
+            if !response.has_key?("salt") || response["salt"].size < 32
                 raise "Legacy user is not supported"
             end
 
-            if !response["dr"].is_a?(String)
-                raise "Invalid response: derivation rules are missing"
-            end
-
             derivation_rules = JSON.parse response["dr"] rescue \
-                raise "Invalid response: derivation rules are not valid JSON"
+                raise "Failed to parse derivation rules"
 
             {}
         end
