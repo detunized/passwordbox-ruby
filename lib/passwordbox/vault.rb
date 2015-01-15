@@ -48,6 +48,34 @@ module PasswordBox
             {}
         end
 
+        def self.compute_key password, salt, derivation_rules
+            client_iterations = [0, derivation_rules.fetch("client_iterations", 0).to_i].max
+            server_iterations = [1, derivation_rules.fetch("iterations", 1).to_i].max
+
+            step1 = pbkdf2_sha1 password, salt, 1, 512
+            step2 = pbkdf2_sha256 step1, salt, client_iterations, 512
+            step3 = pbkdf2_sha256 step2, salt, server_iterations, 256
+            step4 = pbkdf2_sha1 step3 + password, salt, 1, 512
+
+            step4
+        end
+
+        def self.pbkdf2_sha1 password, salt, iterations, bits
+            pbkdf2 password, salt, iterations, bits, "sha1"
+        end
+
+        def self.pbkdf2_sha256 password, salt, iterations, bits
+            pbkdf2 password, salt, iterations, bits, "sha256"
+        end
+
+        def self.pbkdf2 password, salt, iterations, bits, sha
+            if iterations > 0
+                Digest.hexencode OpenSSL::PKCS5.pbkdf2_hmac password, salt, iterations, bits / 8, sha
+            else
+                password
+            end
+        end
+
         def self.fetch_accounts session
             []
         end
