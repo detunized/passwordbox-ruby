@@ -13,42 +13,58 @@ describe PasswordBox::Vault do
     end
 
     describe ".parse_response" do
-        let(:valid_response) { {"salt" => "0" * 32, "dr" => "{}"} }
-        let(:session) { PasswordBox::Vault.parse_response valid_response }
+        let(:password) { "password" }
+        let(:encryption_key) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
+        let(:valid_response) {
+            {
+                "salt"  => "1095d8447adfdba215ea3dfd7dbf029cc8cf09c6fade18c76a356c908f48175b",
+                "dr"    => "{\"client_iterations\":\"500\"," +
+                           "\"iterations\":\"9498\",\"algo\":\"sha256\"}",
+                "k_kek" => "AAR6fDOLfXJKRxiYYhm4u/OgQw3tIWtPUFutlF55RgshUagCtR3WXiZGG52m" +
+                           "2RutxUrKcrJj7ZdTHVWukvYH2MveKbKuljwVv0zWnSwHqQSf0aRzJhyl0JWB"
+            }
+        }
+
+        def parse response
+            PasswordBox::Vault.parse_response response, password
+        end
 
         it "parses server response and returns session" do
-            expect(session).to be_instance_of Hash
+            expect(
+                parse valid_response
+            ).to eq encryption_key
         end
 
         it "raises an exception on missing salt" do
             expect {
-                PasswordBox::Vault.parse_response valid_response.without("salt")
+                parse valid_response.without("salt")
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
         it "raises an exception on short salt" do
             expect {
-                PasswordBox::Vault.parse_response valid_response.update("salt" => "too short")
+                parse valid_response.update("salt" => "too short")
             }.to raise_error RuntimeError, "Legacy user is not supported"
         end
 
         it "raises an exception on missing derivation rules" do
             expect {
-                PasswordBox::Vault.parse_response valid_response.without("dr")
+                parse valid_response.without("dr")
             }.to raise_error RuntimeError, "Failed to parse derivation rules"
         end
 
         it "raises an exception on non-JSON derivation rules" do
             expect {
-                PasswordBox::Vault.parse_response valid_response.update("dr" => "not json")
+                parse valid_response.update("dr" => "not json")
             }.to raise_error RuntimeError, "Failed to parse derivation rules"
         end
     end
 
-    describe ".compute_key" do
+    describe ".compute_kek" do
         let(:password) { "password" }
         let(:salt) { "salt" }
 
+        # Tests generated with the PasswordBox JS sources
         let(:tests) {
             {
                 [ 0,  0] => "4d30606be4afc1f3f37d52b6c69c068661dd6cf0afdf2f3fc102797f336c5133" +
@@ -74,15 +90,29 @@ describe PasswordBox::Vault do
             }
         }
 
-        it "computes key" do
+        it "computes kek" do
             tests.each do |rules, key|
                 expect(
-                    PasswordBox::Vault.compute_key password, salt, {
+                    PasswordBox::Vault.compute_kek password, salt, {
                         "client_iterations" => rules[0],
                         "iterations" => rules[1]
                     }
                 ).to eq key
             end
+        end
+    end
+
+    describe ".decrypt" do
+        let(:encrypted) { "AAR6fDOLfXJKRxiYYhm4u/OgQw3tIWtPUFutlF55RgshUagCtR3WXiZGG52m" +
+                          "2RutxUrKcrJj7ZdTHVWukvYH2MveKbKuljwVv0zWnSwHqQSf0aRzJhyl0JWB" }
+        let(:decrypted) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
+        let(:encryption_key) { "acb3489c1c138d83ae7c814b984850e6de4fd2d06c44cb149a995d83b6a46b83" +
+                               "53e1de2ac8a0ca840b8f625664254a449eb75340cc34946cda91597d1d07fd2d" }
+
+        it "decrypts cipher text" do
+            expect(
+                PasswordBox::Vault.decrypt encrypted, encryption_key
+            ).to eq decrypted
         end
     end
 end

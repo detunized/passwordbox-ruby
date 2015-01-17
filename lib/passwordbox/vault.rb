@@ -5,6 +5,9 @@ require "openssl"
 require "httparty"
 require "json"
 
+# The gem doesn't really work
+module SJCL; end; require "sjcl"
+
 module PasswordBox
     class Vault
         class HTTP
@@ -15,8 +18,7 @@ module PasswordBox
 
         # Fetches a blob from the server and creates a vault
         def self.open_remote username, password
-            response = login username, password
-            session = parse_response response
+            session = login username, password
             accounts = fetch_accounts session
 
             new accounts
@@ -29,7 +31,10 @@ module PasswordBox
                                  query: {member: {email: username, password: hash}}
 
             # TODO: Handle errors!
-            response.parsed_response
+            key = parse_response response.parsed_response, password
+            session = response.headers["Set-Cookie"][/_pwdbox_session=(.*?);/, 1]
+
+            {id: session, key: key}
         end
 
         def self.password_hash username, password
@@ -37,18 +42,23 @@ module PasswordBox
             Digest.hexencode OpenSSL::PKCS5.pbkdf2_hmac(password, salt, 10000, 32, "sha256")
         end
 
-        def self.parse_response response
-            if !response.has_key?("salt") || response["salt"].size < 32
+        def self.parse_response response, password
+            salt = response["salt"]
+            if salt.nil? || salt.size < 32
                 raise "Legacy user is not supported"
             end
 
             derivation_rules = JSON.parse response["dr"] rescue \
                 raise "Failed to parse derivation rules"
 
-            {}
+            kek = compute_kek password, salt, derivation_rules
+
+            decrypt response["k_kek"], kek
         end
 
-        def self.compute_key password, salt, derivation_rules
+        # Computes the KEK (key encryption key) which is used to encrypt/decrypt the actual key
+        # with which all the data is encrypted.
+        def self.compute_kek password, salt, derivation_rules
             client_iterations = [0, derivation_rules.fetch("client_iterations", 0).to_i].max
             server_iterations = [1, derivation_rules.fetch("iterations", 1).to_i].max
 
@@ -74,6 +84,41 @@ module PasswordBox
             else
                 password
             end
+        end
+
+        # Decrypts a piece of data. Encrypted data is base64 encoded.
+        # The key is hex encoded. Only first 256 of key are used.
+        # Decrypted data is encoded in plain binary.
+        #
+        # Encrypted data is made up of the following parts:
+        # 1 byte at 0: ignored
+        # 1 byte at 1: format version (only 4 is supported)
+        # 16 bytes at 2: IV - initialized vector for AES-CCM encryption
+        # the rest at 18: cipher text (encrypted data)
+        def self.decrypt encrypted_base64, key_hex
+            # Decode to binary
+            encrypted = SJCL::Codec::Base64.toBits encrypted_base64
+            key = SJCL::Codec::Hex.toBits key_hex
+
+            # Version byte is at offset 1
+            version = SJCL::BitArray.extract encrypted, 8, 8
+            if version != 4
+                raise "Unsupported cipher format version: #{version}"
+            end
+
+            # We use AES-256-CCM not matter how long the key is
+            key = SJCL::BitArray.clamp key, 256
+
+            # Split encrypted into IV and cipher
+            iv = SJCL::BitArray.bitSlice encrypted, 16, 16 + 128
+            cipher = SJCL::BitArray.bitSlice encrypted, 16 + 128
+
+            # Decrypt
+            aes = SJCL::Cipher::AES.new key
+            decrypted = SJCL::Mode::CCM.decrypt aes, cipher, iv
+
+            # Decrypted data is in SJCL.bitArray format. Convert it to binary string.
+            SJCL::Codec::UTF8String.fromBits decrypted
         end
 
         def self.fetch_accounts session
