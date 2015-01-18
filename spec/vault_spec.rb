@@ -117,11 +117,9 @@ describe PasswordBox::Vault do
 
     describe ".decrypt" do
         # Generated with the PasswordBox JS sources
-        let(:encrypted) { "AAR6fDOLfXJKRxiYYhm4u/OgQw3tIWtPUFutlF55RgshUagCtR3WXiZGG52m" +
-                          "2RutxUrKcrJj7ZdTHVWukvYH2MveKbKuljwVv0zWnSwHqQSf0aRzJhyl0JWB" }
-        let(:decrypted) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
-        let(:encryption_key) { "acb3489c1c138d83ae7c814b984850e6de4fd2d06c44cb149a995d83b6a46b83" +
-                               "53e1de2ac8a0ca840b8f625664254a449eb75340cc34946cda91597d1d07fd2d" }
+        let(:encrypted) { "AATXkbQnk41DJzqyfcFtcTaYE+ptuHwtC9TCmVdsK8/uXA==" }
+        let(:decrypted) { "password" }
+        let(:encryption_key) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
 
         it "decrypts cipher text" do
             expect(
@@ -131,7 +129,7 @@ describe PasswordBox::Vault do
 
         it "uses first 256 bits of the key only" do
             expect(
-                PasswordBox::Vault.decrypt encrypted, encryption_key[0, 256 / 8 * 2]
+                PasswordBox::Vault.decrypt encrypted, encryption_key + "deadbeef" * 8
             ).to eq decrypted
         end
     end
