@@ -101,6 +101,8 @@ module PasswordBox
         # 16 bytes at 2: IV - initialized vector for AES-CCM encryption
         # the rest at 18: cipher text (encrypted data)
         def self.decrypt encrypted_base64, key_hex
+            return "" if encrypted_base64.empty?
+
             # Decode to binary
             encrypted = SJCL::Codec::Base64.toBits encrypted_base64
             key = SJCL::Codec::Hex.toBits key_hex

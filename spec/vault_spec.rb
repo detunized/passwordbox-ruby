@@ -132,5 +132,11 @@ describe PasswordBox::Vault do
                 PasswordBox::Vault.decrypt encrypted, encryption_key + "deadbeef" * 8
             ).to eq decrypted
         end
+
+        it "decrypts blank cipher as blank" do
+            expect(
+                PasswordBox::Vault.decrypt "", encryption_key
+            ).to eq ""
+        end
     end
 end
