@@ -37,6 +37,7 @@ module PasswordBox
             key = parse_response response.parsed_response, password
             session = response.headers["Set-Cookie"][/_pwdbox_session=(.*?);/, 1]
 
+            # TODO: Make a class for this!
             {id: session, key: key}
         end
 
