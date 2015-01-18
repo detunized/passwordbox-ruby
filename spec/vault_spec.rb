@@ -139,4 +139,81 @@ describe PasswordBox::Vault do
             ).to eq ""
         end
     end
+
+    describe ".parse_accounts" do
+        # TODO: Remove copy-paste!
+        let(:encryption_key) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
+        let(:raw_accounts) {
+            [
+                {
+                                  "id" => 15839376,
+                           "member_id" => 7914927,
+                                "name" => "example.com",
+                                 "url" => "http://example.com",
+                               "login" => "username",
+                            "password" => nil,
+                                "note" => {},
+                          "created_at" => "2014-12-12T19:25:45-05:00",
+                          "updated_at" => "2015-01-17T19:27:58-05:00",
+                                "type" => "Other",
+                    "virtual_password" => nil,
+                              "fields" => nil,
+                              "domain" => "example.com",
+                             "details" => "",
+                          "password_k" => "AATXkbQnk41DJzqyfcFtcTaYE+ptuHwtC9TCmVdsK8/uXA==",
+                            "settings" => "{\"autologin\":\"1\",\"password_reprompt\":\"0\",\"subdomain_only\":\"0\"}",
+                              "memo_k" => nil
+                },
+                {
+                                  "id" => 15845973,
+                           "member_id" => 7914927,
+                                "name" => "dude",
+                                 "url" => "https://dude.com",
+                               "login" => "jeffrey.lebowski",
+                            "password" => nil,
+                                "note" => {},
+                          "created_at" => "2014-12-13T06:25:32-05:00",
+                          "updated_at" => "2015-01-17T19:36:49-05:00",
+                                "type" => "Other",
+                    "virtual_password" => nil,
+                              "fields" => nil,
+                              "domain" => "dude.com",
+                             "details" => nil,
+                          "password_k" => "AASkzvBholmWAQ1hktcv91xhy3jL36DnUie3LRQpPvKabQwO",
+                              "memo_k" => "AAR7gYNOSK7FcN2+1KMc0B2encUolAbnq06kaROE2uMW1M8n0JJ3bQ=="
+                }
+            ]
+        }
+
+        let(:accounts) {
+            [
+                {
+                        name: "example.com",
+                         url: "http://example.com",
+                    username: "username",
+                    password: "password",
+                       notes: ""
+                },
+                {
+                        name: "dude",
+                         url: "https://dude.com",
+                    username: "jeffrey.lebowski",
+                    password: "logjammin'",
+                       notes: "Get a new rug!"
+                }
+            ]
+        }
+
+        it "parses accounts" do
+            expect(
+                PasswordBox::Vault.parse_accounts raw_accounts, encryption_key
+            ).to eq accounts
+        end
+
+        it "parses empty accounts" do
+            expect(
+                PasswordBox::Vault.parse_accounts [], encryption_key
+            ).to eq []
+        end
+    end
 end

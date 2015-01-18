@@ -141,7 +141,16 @@ module PasswordBox
 
         # Parses account information downloaded from the server into internal data format.
         def self.parse_accounts raw_accounts, encryption_key
-            []
+            raw_accounts.map do |raw|
+                # TODO: Make a class for this!
+                {
+                    name: raw["name"] || "",
+                    url: raw["url"] || "",
+                    username: raw["login"] || "",
+                    password: decrypt(raw["password_k"] || "", encryption_key),
+                    notes: decrypt(raw["memo_k"] || "", encryption_key)
+                }
+            end
         end
 
         # This is internal and it's not supposed to be called directly
