@@ -5,7 +5,8 @@ require "openssl"
 require "httparty"
 require "json"
 
-# The gem doesn't really work
+# A hack/fix to make the gem work.
+# TODO: Fix upstream code and then remove this.
 module SJCL; end; require "sjcl"
 
 module PasswordBox
