@@ -116,6 +116,7 @@ describe PasswordBox::Vault do
     end
 
     describe ".decrypt" do
+        # Generated with the PasswordBox JS sources
         let(:encrypted) { "AAR6fDOLfXJKRxiYYhm4u/OgQw3tIWtPUFutlF55RgshUagCtR3WXiZGG52m" +
                           "2RutxUrKcrJj7ZdTHVWukvYH2MveKbKuljwVv0zWnSwHqQSf0aRzJhyl0JWB" }
         let(:decrypted) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
@@ -125,6 +126,12 @@ describe PasswordBox::Vault do
         it "decrypts cipher text" do
             expect(
                 PasswordBox::Vault.decrypt encrypted, encryption_key
+            ).to eq decrypted
+        end
+
+        it "uses first 256 bits of the key only" do
+            expect(
+                PasswordBox::Vault.decrypt encrypted, encryption_key[0, 256 / 8 * 2]
             ).to eq decrypted
         end
     end
