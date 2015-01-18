@@ -20,12 +20,14 @@ module PasswordBox
         # Fetches a blob from the server and creates a vault
         def self.open_remote username, password
             session = login username, password
-            accounts = fetch_accounts session
+            raw_accounts = fetch_accounts session
+            accounts = parse_accounts raw_accounts, session[:key]
 
             new accounts
         end
 
         # TODO: Move these functions out to separate classes!
+        # TODO: Test this!
         def self.login username, password
             hash = compute_password_hash username, password
             response = HTTP.post "https://api0.passwordbox.com/api/0/api_login.json",
@@ -123,18 +125,25 @@ module PasswordBox
             SJCL::Codec::UTF8String.fromBits decrypted
         end
 
+        # Fetches account information from the PB server.
+        # Returns accounts extracted from JSON. No data conversion or decryption is done here.
+        # TODO: Test this!
         def self.fetch_accounts session
+            response = HTTP.get "https://api0.passwordbox.com/api/0/assets",
+                                cookies: {"_pwdbox_session" => session[:id]}
+
+            # TODO: Handle errors!
+            response.parsed_response
+        end
+
+        # Parses account information downloaded from the server into internal data format.
+        def self.parse_accounts raw_accounts, encryption_key
             []
         end
 
         # This is internal and it's not supposed to be called directly
         def initialize accounts
-            @accounts = []
-            @accounts = parse_accounts accounts
-        end
-
-        def parse_accounts accounts
-            accounts.map { |i| {} }
+            @accounts = accounts
         end
     end
 end
