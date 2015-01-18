@@ -27,7 +27,7 @@ module PasswordBox
 
         # TODO: Move these functions out to separate classes!
         def self.login username, password
-            hash = password_hash username, password
+            hash = compute_password_hash username, password
             response = HTTP.post "https://api0.passwordbox.com/api/0/api_login.json",
                                  query: {member: {email: username, password: hash}}
 
@@ -38,9 +38,10 @@ module PasswordBox
             {id: session, key: key}
         end
 
-        def self.password_hash username, password
+        # Computes password hash that is sent to the PB server instead of the plain text password.
+        def self.compute_password_hash username, password
             salt = Digest::SHA1.hexdigest username
-            Digest.hexencode OpenSSL::PKCS5.pbkdf2_hmac(password, salt, 10000, 32, "sha256")
+            pbkdf2_sha256 password, salt, 10_000, 256
         end
 
         def self.parse_response response, password

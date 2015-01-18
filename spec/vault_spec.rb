@@ -12,6 +12,19 @@ describe PasswordBox::Vault do
         end
     end
 
+    describe ".compute_password_hash" do
+        # Generated with the PasswordBox JS sources
+        let(:username) { "username" }
+        let(:password) { "password" }
+        let(:hash) { "bb5eeb368dd3d7ba5ab371c76ba5073e0a91f55697b81790bb34846d3e25f8e4" }
+
+        it "computes password hash" do
+            expect(
+                PasswordBox::Vault.compute_password_hash username, password
+            ).to eq hash
+        end
+    end
+
     describe ".parse_response" do
         let(:password) { "password" }
         let(:encryption_key) { "bc0d63541710541e493d1077e49e92523a4b7c53af1883266ed6c5be2f1b9562" }
